@@ -1,0 +1,8 @@
+{
+  "reader": {
+    "name": "Your Name",
+    "profile": "a brief description of who you are and your goals — e.g. 'a product manager in consumer tech with 5 years experience. Goals: stay current on AI/product trends, find actionable insights.' This is injected into every digest prompt to personalize the output.",
+    "background": "your domain expertise and industry — e.g. 'product management, consumer apps, growth, monetization'. Used to tailor the actionable suggestions section.",
+    "actionable_label": "For You"
+  }
+}

@@ -1,0 +1,6 @@
+google-genai
+google-api-python-client
+python-dotenv
+requests
+feedparser
+pytest>=7.0

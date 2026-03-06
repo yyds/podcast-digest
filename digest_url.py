@@ -1,0 +1,187 @@
+"""
+One-off digest runner.
+Accepts YouTube, xiaoyuzhou, and Apple Podcasts URLs, processes each,
+and sends a single combined email.
+
+Usage:
+    python digest_url.py <url1> <url2> ...
+"""
+import os
+import re
+import sys
+import json
+import requests
+from html import unescape
+from dotenv import load_dotenv
+from googleapiclient.discovery import build
+
+from summarize import summarize_video
+from summarize_podcast import summarize_episode
+from send_combined_email import send_combined_digest
+
+load_dotenv()
+
+YOUTUBE_API_KEY = os.getenv("YOUTUBE_API_KEY")
+HEADERS = {"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)"}
+
+
+# ── Metadata fetchers ──────────────────────────────────────────────────────────
+
+def _fetch_xiaoyuzhou(url):
+    """Extract episode metadata from a xiaoyuzhou episode page."""
+    r = requests.get(url, headers=HEADERS, timeout=20)
+    r.raise_for_status()
+    m = re.search(
+        r'<script id="__NEXT_DATA__" type="application/json">(.*?)</script>',
+        r.text, re.DOTALL
+    )
+    if not m:
+        raise RuntimeError("Could not find __NEXT_DATA__ in xiaoyuzhou page")
+    data = json.loads(m.group(1))
+    ep = data["props"]["pageProps"]["episode"]
+    episode_id = ep.get("eid") or url.split("/")[-1]
+    title = ep.get("title", "Untitled")
+    channel = ep.get("podcast", {}).get("title", "Unknown Podcast")
+    # shownotes is HTML — strip tags for the description
+    raw_notes = ep.get("shownotes", "") or ep.get("description", "")
+    description = re.sub(r"<[^>]+>", " ", raw_notes)
+    description = unescape(description).strip()[:500]
+    audio_url = ep["media"]["source"]["url"]
+    return {
+        "anchor_id": episode_id,
+        "episode_id": episode_id,
+        "title": title,
+        "channel": channel,
+        "description": description,
+        "url": url,
+        "audio_url": audio_url,
+    }
+
+
+def _fetch_apple_podcasts(url):
+    """Extract episode metadata from an Apple Podcasts URL via iTunes API."""
+    # URL: .../id<podcast_id>?i=<episode_id>
+    pod_m = re.search(r"/id(\d+)", url)
+    ep_m = re.search(r"[?&]i=(\d+)", url)
+    if not pod_m or not ep_m:
+        raise RuntimeError(f"Cannot parse Apple Podcasts URL: {url}")
+    podcast_id = pod_m.group(1)
+    episode_track_id = int(ep_m.group(1))
+
+    api_url = f"https://itunes.apple.com/lookup?id={podcast_id}&entity=podcastEpisode&limit=300"
+    r = requests.get(api_url, timeout=20)
+    r.raise_for_status()
+    results = r.json().get("results", [])
+    ep = next((x for x in results if x.get("trackId") == episode_track_id), None)
+    if not ep:
+        raise RuntimeError(f"Episode {episode_track_id} not found in iTunes results for podcast {podcast_id}")
+
+    episode_id = str(episode_track_id)
+    title = ep.get("trackName", "Untitled")
+    channel = ep.get("collectionName", "Unknown Podcast")
+    description = (ep.get("description", "") or "")[:500]
+    audio_url = ep.get("episodeUrl", "")
+    if not audio_url:
+        raise RuntimeError(f"No episodeUrl found for episode {episode_track_id}")
+    episode_url = ep.get("trackViewUrl", url)
+    return {
+        "anchor_id": episode_id,
+        "episode_id": episode_id,
+        "title": title,
+        "channel": channel,
+        "description": description,
+        "url": episode_url,
+        "audio_url": audio_url,
+    }
+
+
+def _extract_youtube_id(url):
+    m = re.search(r"(?:v=|youtu\.be/)([A-Za-z0-9_-]{11})", url)
+    if not m:
+        raise RuntimeError(f"Cannot parse YouTube video ID from: {url}")
+    return m.group(1)
+
+
+def _fetch_youtube_metadata(url):
+    video_id = _extract_youtube_id(url)
+    youtube = build("youtube", "v3", developerKey=YOUTUBE_API_KEY)
+    resp = youtube.videos().list(part="snippet", id=video_id).execute()
+    items = resp.get("items", [])
+    if not items:
+        raise RuntimeError(f"No YouTube results for video: {video_id}")
+    snippet = items[0]["snippet"]
+    return {
+        "video_id": video_id,
+        "title": snippet["title"],
+        "channel": snippet["channelTitle"],
+        "description": snippet.get("description", "")[:500],
+        "url": f"https://www.youtube.com/watch?v={video_id}",
+    }
+
+
+def fetch_episode_metadata(url):
+    url = url.strip()
+    if "youtube.com" in url or "youtu.be" in url:
+        return ("youtube", _fetch_youtube_metadata(url))
+    elif "xiaoyuzhoufm.com" in url:
+        return ("podcast", _fetch_xiaoyuzhou(url))
+    elif "podcasts.apple.com" in url:
+        return ("podcast", _fetch_apple_podcasts(url))
+    else:
+        raise RuntimeError(f"Unsupported URL source: {url}")
+
+
+# ── Main ───────────────────────────────────────────────────────────────────────
+
+def main(urls):
+    # Deduplicate while preserving order
+    seen = set()
+    unique_urls = []
+    for u in urls:
+        u = u.strip()
+        if u not in seen:
+            seen.add(u)
+            unique_urls.append(u)
+
+    print(f"[INFO] Processing {len(unique_urls)} URL(s)...")
+    youtube_digests = []
+    podcast_digests = []
+
+    for url in unique_urls:
+        print(f"\n[INFO] Fetching metadata: {url[:70]}...")
+        try:
+            kind, metadata = fetch_episode_metadata(url)
+        except Exception as e:
+            print(f"[ERROR] Metadata fetch failed: {e}")
+            continue
+
+        print(f"[INFO] {metadata['title']} ({metadata['channel']})")
+
+        if kind == "youtube":
+            digest = summarize_video(metadata)
+            if digest:
+                youtube_digests.append({"video": metadata, "digest": digest})
+            else:
+                print(f"[WARN] No digest produced for: {metadata['title']}")
+        else:
+            digest = summarize_episode(metadata)
+            if digest:
+                podcast_digests.append({"episode": metadata, "digest": digest})
+            else:
+                print(f"[WARN] No digest produced for: {metadata['title']}")
+
+    if not youtube_digests and not podcast_digests:
+        print("[WARN] No digests produced — nothing to send.")
+        return
+
+    total = len(youtube_digests) + len(podcast_digests)
+    print(f"\n[INFO] Sending email with {total} digest(s)...")
+    send_combined_digest(youtube_digests=youtube_digests, podcast_digests=podcast_digests)
+    print("[INFO] Done.")
+
+
+if __name__ == "__main__":
+    if len(sys.argv) < 2:
+        print("Usage: python digest_url.py <url1> <url2> ...")
+        sys.exit(1)
+    main(sys.argv[1:])

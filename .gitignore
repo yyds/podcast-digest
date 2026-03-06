@@ -1,0 +1,27 @@
+# Personal config — never commit these
+.env
+config.json
+processed_videos.json
+processed_podcasts.json
+
+# Runtime output
+archive/
+logs/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# macOS
+.DS_Store
+
+# Internal / personal docs
+BACKLOG.md
+SPEC.md
+mockup-a.html
+mockup-b.html
+cron.log
+
+# Editor internals
+.cursor/
