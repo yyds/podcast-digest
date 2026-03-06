@@ -4,6 +4,12 @@
 
 An AI-powered daily digest — monitors English YouTube channels and Chinese podcasts (Xiaoyuzhou / Apple Podcasts), transcribes and summarizes new content, and emails you a structured briefing.
 
+**Two ways to use it:**
+- **YouTube only** — Monitor English YouTube channels. Needs 4 API keys. Easy to set up.
+- **YouTube + Chinese podcasts** — Full bilingual setup. Adds Groq (transcription) and DeepSeek (Chinese summarization). Needs 6 API keys.
+
+Both modes use the same codebase — just leave the podcast keys unset if you only want YouTube.
+
 ## What You Get
 
 Each digest email includes:
@@ -61,16 +67,23 @@ python3 digest_url.py "https://podcasts.apple.com/..."
 
 ## API Keys
 
+**YouTube only (4 keys):**
+
 | Key | Required for | Where to get |
 |-----|--------------|--------------|
-| `YOUTUBE_API_KEY` | YouTube videos | [Google Cloud Console](https://console.cloud.google.com/apis/credentials) |
-| `GEMINI_API_KEY` | YouTube summaries | [Google AI Studio](https://aistudio.google.com/app/apikey) |
-| `GMAIL_ADDRESS` + `GMAIL_APP_PASSWORD` | Sending digest | [Google App Passwords](https://myaccount.google.com/apppasswords) |
+| `YOUTUBE_API_KEY` | Fetching YouTube videos | [Google Cloud Console](https://console.cloud.google.com/apis/credentials) |
+| `GEMINI_API_KEY` | Summarizing YouTube content | [Google AI Studio](https://aistudio.google.com/app/apikey) |
+| `GMAIL_ADDRESS` + `GMAIL_APP_PASSWORD` | Sending the digest email | [Google App Passwords](https://myaccount.google.com/apppasswords) |
 | `RECIPIENT_EMAIL` | Who receives the digest | Your email |
-| `GROQ_API_KEY` | Podcast transcription (optional) | [Groq Console](https://console.groq.com/keys) |
-| `DEEPSEEK_API_KEY` | Chinese podcast summaries (optional) | [DeepSeek](https://platform.deepseek.com/api_keys) |
 
-**YouTube-only setup:** Leave `GROQ_API_KEY` and `DEEPSEEK_API_KEY` unset. The pipeline skips podcasts and sends YouTube digests only. See [channels_xyz.json](channels_xyz.json) for podcast subscriptions — leave it empty if you only want YouTube.
+**Add Chinese podcasts (2 more keys):**
+
+| Key | Required for | Where to get |
+|-----|--------------|--------------|
+| `GROQ_API_KEY` | Transcribing podcast audio | [Groq Console](https://console.groq.com/keys) |
+| `DEEPSEEK_API_KEY` | Summarizing Chinese podcast content | [DeepSeek](https://platform.deepseek.com/api_keys) |
+
+Leave `GROQ_API_KEY` and `DEEPSEEK_API_KEY` unset to skip podcasts entirely. The pipeline detects missing keys and runs YouTube-only automatically.
 
 ---
 
