@@ -5,11 +5,13 @@ and sends a single combined email.
 
 Usage:
     python digest_url.py <url1> <url2> ...
+    python digest_url.py --lang zh <url>   # Chinese transcript + output
 """
 import os
 import re
 import sys
 import json
+import argparse
 import requests
 from html import unescape
 from dotenv import load_dotenv
@@ -102,7 +104,7 @@ def _extract_youtube_id(url):
     return m.group(1)
 
 
-def _fetch_youtube_metadata(url):
+def _fetch_youtube_metadata(url, lang="en"):
     video_id = _extract_youtube_id(url)
     youtube = build("youtube", "v3", developerKey=YOUTUBE_API_KEY)
     resp = youtube.videos().list(part="snippet", id=video_id).execute()
@@ -116,13 +118,14 @@ def _fetch_youtube_metadata(url):
         "channel": snippet["channelTitle"],
         "description": snippet.get("description", "")[:500],
         "url": f"https://www.youtube.com/watch?v={video_id}",
+        "lang": lang,
     }
 
 
-def fetch_episode_metadata(url):
+def fetch_episode_metadata(url, lang="en"):
     url = url.strip()
     if "youtube.com" in url or "youtu.be" in url:
-        return ("youtube", _fetch_youtube_metadata(url))
+        return ("youtube", _fetch_youtube_metadata(url, lang=lang))
     elif "xiaoyuzhoufm.com" in url:
         return ("podcast", _fetch_xiaoyuzhou(url))
     elif "podcasts.apple.com" in url:
@@ -133,7 +136,7 @@ def fetch_episode_metadata(url):
 
 # ── Main ───────────────────────────────────────────────────────────────────────
 
-def main(urls):
+def main(urls, lang="en"):
     # Deduplicate while preserving order
     seen = set()
     unique_urls = []
@@ -150,7 +153,7 @@ def main(urls):
     for url in unique_urls:
         print(f"\n[INFO] Fetching metadata: {url[:70]}...")
         try:
-            kind, metadata = fetch_episode_metadata(url)
+            kind, metadata = fetch_episode_metadata(url, lang=lang)
         except Exception as e:
             print(f"[ERROR] Metadata fetch failed: {e}")
             continue
@@ -181,7 +184,9 @@ def main(urls):
 
 
 if __name__ == "__main__":
-    if len(sys.argv) < 2:
-        print("Usage: python digest_url.py <url1> <url2> ...")
-        sys.exit(1)
-    main(sys.argv[1:])
+    parser = argparse.ArgumentParser(description="On-demand digest runner")
+    parser.add_argument("urls", nargs="+", help="YouTube, Xiaoyuzhou, or Apple Podcasts URLs")
+    parser.add_argument("--lang", default="en", choices=["en", "zh"],
+                        help="Transcript language preference and digest output language (default: en)")
+    args = parser.parse_args()
+    main(args.urls, lang=args.lang)
