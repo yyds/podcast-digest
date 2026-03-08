@@ -120,6 +120,28 @@ OUTPUT FORMAT (markdown, compact — no extra blank lines between items):
    Anchor Quote: [MM:SS] "[quote]"   (include [MM:SS] timestamp if available, like Part 2)
 """
 
+BRIEF_PROMPT_TEMPLATE = """You are an expert content analyst.
+
+You will receive a short YouTube video (under 20 minutes). Use the title and description below to correct any transcription errors, especially names, companies, and technical terms.
+
+VIDEO TITLE: {title}
+CHANNEL: {channel}
+DESCRIPTION: {description}
+
+Write in clear, direct prose. Never say "In this video" or "The host discusses." The reader has not watched the video.
+
+LANGUAGE RULE: If the transcript is in Chinese, write the entire output in Chinese and use these labels: **快速摘要：** and **关键点：**
+
+OUTPUT FORMAT (markdown, compact):
+
+**Quick Take:** [2–3 sentences — core argument and why it matters]
+**Key Points:**
+- [Most important single-sentence insight]
+- [Second key point]
+- [Third key point]
+- [Additional point if warranted]
+"""
+
 
 def summarize_video(video):
     transcript = get_transcript(video["video_id"], video.get("lang", "en"))
@@ -166,6 +188,48 @@ def summarize_video(video):
 
     except Exception as e:
         print(f"[ERROR] Failed to summarize {video['title']}: {e}")
+        return None
+
+
+def summarize_video_brief(video):
+    """Generate a compact Quick Take digest for short videos (under 20 min)."""
+    transcript = get_transcript(video["video_id"], video.get("lang", "en"))
+    if not transcript:
+        print(f"[WARN] No transcript available for: {video['title']}")
+        return None
+
+    prompt = BRIEF_PROMPT_TEMPLATE.format(
+        title=video["title"],
+        channel=video["channel"],
+        description=video["description"],
+    )
+    full_prompt = f"{prompt}\n\n---\n\nTRANSCRIPT:\n{transcript}"
+
+    try:
+        response = client.models.generate_content(
+            model=MODEL,
+            contents=full_prompt
+        )
+        digest = response.text
+
+        today = date.today().isoformat()
+        archive_dir = os.path.join("archive", today)
+        os.makedirs(archive_dir, exist_ok=True)
+
+        slug = re.sub(r"[^a-z0-9]+", "-", video["title"].lower())[:50]
+        filepath = os.path.join(archive_dir, f"brief-{slug}.md")
+
+        with open(filepath, "w") as f:
+            f.write(f"# {video['title']}\n")
+            f.write(f"**Channel:** {video['channel']}\n")
+            f.write(f"**URL:** {video['url']}\n\n")
+            f.write(digest)
+
+        print(f"[INFO] Saved brief digest to {filepath}")
+        return digest
+
+    except Exception as e:
+        print(f"[ERROR] Failed to brief-summarize {video['title']}: {e}")
         return None
 
 

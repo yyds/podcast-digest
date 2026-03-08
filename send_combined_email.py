@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 import pathlib
 
 import re
-from send_email import CSS, render_card, card_anchor, render_short_videos_section, _send_html_email, bold
+from send_email import CSS, render_card, render_brief_card, card_anchor, render_short_videos_section, _send_html_email, bold
 
 _MONTH_CN = ["1月", "2月", "3月", "4月", "5月", "6月",
              "7月", "8月", "9月", "10月", "11月", "12月"]
@@ -22,7 +22,7 @@ def _adapt_for_render(item):
 load_dotenv()
 
 
-def build_combined_toc(youtube_digests, podcast_digests):
+def build_combined_toc(youtube_digests, podcast_digests, yt_brief_digests=None):
     rows = ""
     num = 1
 
@@ -35,6 +35,20 @@ def build_combined_toc(youtube_digests, podcast_digests):
         <tr class="toc-row">
           <td style="padding:5px 8px 5px 0;width:22px;font-size:11px;color:#777;vertical-align:top;">{num}.</td>
           <td style="padding:5px 8px 5px 0;width:140px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:#555;vertical-align:top;">{video['channel']}</td>
+          <td style="padding:5px 0;vertical-align:top;"><a class="toc-link" href="#{anchor}">{video['title']}</a></td>
+        </tr>"""
+            num += 1
+
+    if yt_brief_digests:
+        margin = "padding-top:10px;" if youtube_digests else ""
+        rows += f'<tr><td colspan="3" style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#6366f1;padding:6px 0 4px;{margin}">⚡ Quick Takes</td></tr>'
+        for item in yt_brief_digests:
+            video = item["video"]
+            anchor = card_anchor(video)
+            rows += f"""
+        <tr class="toc-row">
+          <td style="padding:5px 8px 5px 0;width:22px;font-size:11px;color:#777;vertical-align:top;">{num}.</td>
+          <td style="padding:5px 8px 5px 0;width:140px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:#6366f1;vertical-align:top;">{video['channel']}</td>
           <td style="padding:5px 0;vertical-align:top;"><a class="toc-link" href="#{anchor}">{video['title']}</a></td>
         </tr>"""
             num += 1
@@ -61,17 +75,22 @@ def build_combined_toc(youtube_digests, podcast_digests):
     </div>"""
 
 
-def build_combined_email_html(youtube_digests, podcast_digests, yt_short_videos=None):
+def build_combined_email_html(youtube_digests, podcast_digests, yt_short_videos=None, yt_brief_digests=None):
     today_en = date.today().strftime("%B %d, %Y")
     date_cn = _date_cn()
     yt_count = len(youtube_digests)
     pod_count = len(podcast_digests)
+    brief_count = len(yt_brief_digests or [])
 
-    toc_html = build_combined_toc(youtube_digests, podcast_digests)
+    toc_html = build_combined_toc(youtube_digests, podcast_digests, yt_brief_digests or [])
 
     youtube_html = ""
     if youtube_digests:
         youtube_html = "\n".join(render_card(item) for item in youtube_digests)
+
+    brief_html = ""
+    if yt_brief_digests:
+        brief_html = "\n".join(render_brief_card(item) for item in yt_brief_digests)
 
     podcast_html = ""
     if podcast_digests:
@@ -87,6 +106,8 @@ def build_combined_email_html(youtube_digests, podcast_digests, yt_short_videos=
     count_line = []
     if yt_count:
         count_line.append(f"{yt_count} video{'s' if yt_count != 1 else ''}")
+    if brief_count:
+        count_line.append(f"{brief_count} quick take{'s' if brief_count != 1 else ''}")
     if pod_count:
         count_line.append(f"{pod_count} 期播客")
     count_str = " · ".join(count_line)
@@ -117,6 +138,7 @@ def build_combined_email_html(youtube_digests, podcast_digests, yt_short_videos=
   </div>
   {toc_html}
   {youtube_html}
+  {brief_html}
   {divider}
   {podcast_html}
   {short_html}
@@ -125,18 +147,21 @@ def build_combined_email_html(youtube_digests, podcast_digests, yt_short_videos=
 </html>"""
 
 
-def send_combined_digest(youtube_digests, podcast_digests, yt_short_videos=None):
+def send_combined_digest(youtube_digests, podcast_digests, yt_short_videos=None, yt_brief_digests=None):
     today = date.today().strftime("%B %d, %Y")
     yt_count = len(youtube_digests)
     pod_count = len(podcast_digests)
+    brief_count = len(yt_brief_digests or [])
 
     parts = []
     if yt_count:
         parts.append(f"{yt_count} video{'s' if yt_count != 1 else ''}")
+    if brief_count:
+        parts.append(f"{brief_count} quick take{'s' if brief_count != 1 else ''}")
     if pod_count:
         parts.append(f"{pod_count} 期播客")
     subject = f"📺🎙️ Daily Digest — {today} ({', '.join(parts)})"
-    html_body = build_combined_email_html(youtube_digests, podcast_digests, yt_short_videos or [])
+    html_body = build_combined_email_html(youtube_digests, podcast_digests, yt_short_videos or [], yt_brief_digests or [])
 
     # Save HTML copy to archive before sending
     today_iso = date.today().isoformat()

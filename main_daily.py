@@ -1,6 +1,6 @@
 import os
 from get_videos import get_new_videos, save_processed as save_yt_processed
-from summarize import summarize_video
+from summarize import summarize_video, summarize_video_brief
 from get_podcasts_xyz import get_new_episodes, save_processed as save_pod_processed
 from summarize_podcast import summarize_episode
 from send_combined_email import send_combined_digest
@@ -25,9 +25,16 @@ def main():
     else:
         print("[INFO] No new YouTube videos today.")
 
-    # Mark short videos as processed
-    for video in yt_short_videos:
-        yt_processed.add(video["video_id"])
+    # Short videos → brief Quick Take digests
+    yt_brief_digests = []
+    if yt_short_videos:
+        print(f"[INFO] Generating Quick Takes for {len(yt_short_videos)} short video(s)...\n")
+        for video in yt_short_videos:
+            print(f"[INFO] Quick Take: {video['title']}")
+            digest = summarize_video_brief(video)
+            if digest:
+                yt_brief_digests.append({"video": video, "digest": digest})
+            yt_processed.add(video["video_id"])
 
     # --- Podcast pipeline ---
     print("\n[INFO] --- Podcast Pipeline ---")
@@ -50,13 +57,13 @@ def main():
         print("[INFO] No new podcast episodes today.")
 
     # --- Send combined email ---
-    if yt_digests or pod_digests or yt_short_videos:
+    if yt_digests or pod_digests or yt_brief_digests:
         print("\n[INFO] Sending combined digest email...")
-        send_combined_digest(yt_digests, pod_digests, yt_short_videos)
+        send_combined_digest(yt_digests, pod_digests, yt_brief_digests=yt_brief_digests)
         save_yt_processed(yt_processed)
         if pod_episodes:
             save_pod_processed(pod_processed)  # Save all discovered episodes, not just successful digests
-        print(f"[INFO] Done. Sent {len(yt_digests)} YouTube + {len(pod_digests)} podcast digest(s), {len(yt_short_videos)} mention(s).")
+        print(f"[INFO] Done. Sent {len(yt_digests)} full + {len(yt_brief_digests)} quick take + {len(pod_digests)} podcast digest(s).")
     else:
         print("\n[INFO] No new content today. Email not sent.")
 

@@ -532,6 +532,58 @@ def build_toc(digests):
     </div>"""
 
 
+def render_brief_card(item):
+    """Compact card for short videos: Quick Take + Key Points only."""
+    video = item["video"]
+    digest = item["digest"]
+    video_url = video["url"]
+    anchor = card_anchor(video)
+
+    lines = digest.strip().split("\n")
+    html_parts = []
+    bullets = []
+
+    def flush_bullets():
+        if bullets:
+            items_html = "".join(
+                f'<li style="font-size:13px;line-height:1.6;color:#333;margin-bottom:3px;">{bold(b)}</li>'
+                for b in bullets
+            )
+            html_parts.append(f'<ul style="margin:4px 0 6px;padding-left:18px;">{items_html}</ul>')
+        bullets.clear()
+
+    in_bullets = False
+    for line in lines:
+        s = line.strip()
+        if not s:
+            continue
+        if s.startswith("- "):
+            bullets.append(s[2:])
+            in_bullets = True
+        else:
+            if in_bullets:
+                flush_bullets()
+                in_bullets = False
+            html_parts.append(
+                f'<p style="margin:0 0 8px;font-size:13px;line-height:1.6;color:#1a1a1a;">{bold(s)}</p>'
+            )
+    if in_bullets:
+        flush_bullets()
+
+    content_html = "\n".join(html_parts)
+    return f"""
+    <div class="card" id="{anchor}" style="border-left:3px solid #6366f1;">
+      <div class="card-top" style="padding:14px 26px 10px;">
+        <div class="card-channel">{video['channel']} <span style="font-size:10px;font-weight:600;color:#6366f1;text-transform:uppercase;letter-spacing:0.8px;margin-left:6px;">· Quick Take</span></div>
+        <div class="card-title">{video['title']}</div>
+        <div class="card-byline"><a class="watch-link" href="{video_url}">▶ Watch original →</a></div>
+      </div>
+      <div class="card-body" style="padding:12px 26px 18px;">
+        {content_html}
+      </div>
+    </div>"""
+
+
 def render_short_videos_section(short_videos):
     if not short_videos:
         return ""
