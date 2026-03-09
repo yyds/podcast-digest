@@ -104,7 +104,33 @@ def _extract_youtube_id(url):
     return m.group(1)
 
 
-def _fetch_youtube_metadata(url, lang="en"):
+def _load_channel_lang_map():
+    """Return handle (lowercase, no @) → lang from channels_en.json."""
+    try:
+        with open("channels_en.json") as f:
+            channels = json.load(f)
+        return {ch["handle"].lstrip("@").lower(): ch.get("lang", "en") for ch in channels}
+    except Exception:
+        return {}
+
+
+def _detect_channel_lang(channel_id, youtube_client):
+    """Look up channel handle via YouTube API and return lang from channels_en.json."""
+    handle_lang = _load_channel_lang_map()
+    if not handle_lang:
+        return None
+    try:
+        resp = youtube_client.channels().list(part="snippet", id=channel_id).execute()
+        items = resp.get("items", [])
+        if not items:
+            return None
+        custom_url = items[0]["snippet"].get("customUrl", "").lstrip("@").lower()
+        return handle_lang.get(custom_url)
+    except Exception:
+        return None
+
+
+def _fetch_youtube_metadata(url, lang=None):
     video_id = _extract_youtube_id(url)
     youtube = build("youtube", "v3", developerKey=YOUTUBE_API_KEY)
     resp = youtube.videos().list(part="snippet", id=video_id).execute()
@@ -112,6 +138,12 @@ def _fetch_youtube_metadata(url, lang="en"):
     if not items:
         raise RuntimeError(f"No YouTube results for video: {video_id}")
     snippet = items[0]["snippet"]
+
+    # Auto-detect lang from channels_en.json if not explicitly overridden
+    if lang is None:
+        channel_id = snippet.get("channelId", "")
+        lang = _detect_channel_lang(channel_id, youtube) or "en"
+
     return {
         "video_id": video_id,
         "title": snippet["title"],
@@ -122,7 +154,7 @@ def _fetch_youtube_metadata(url, lang="en"):
     }
 
 
-def fetch_episode_metadata(url, lang="en"):
+def fetch_episode_metadata(url, lang=None):
     url = url.strip()
     if "youtube.com" in url or "youtu.be" in url:
         return ("youtube", _fetch_youtube_metadata(url, lang=lang))
@@ -136,7 +168,7 @@ def fetch_episode_metadata(url, lang="en"):
 
 # ── Main ───────────────────────────────────────────────────────────────────────
 
-def main(urls, lang="en"):
+def main(urls, lang=None):
     # Deduplicate while preserving order
     seen = set()
     unique_urls = []
@@ -186,7 +218,7 @@ def main(urls, lang="en"):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="On-demand digest runner")
     parser.add_argument("urls", nargs="+", help="YouTube, Xiaoyuzhou, or Apple Podcasts URLs")
-    parser.add_argument("--lang", default="en", choices=["en", "zh"],
-                        help="Transcript language preference and digest output language (default: en)")
+    parser.add_argument("--lang", default=None, choices=["en", "zh"],
+                        help="Override transcript language (auto-detected from channels_en.json by default)")
     args = parser.parse_args()
     main(args.urls, lang=args.lang)
