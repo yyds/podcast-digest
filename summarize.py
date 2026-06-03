@@ -49,7 +49,7 @@ DESCRIPTION: {description}
 
 Write in clear, direct prose. Never say "In this video" or "The host discusses." Each section should stand alone — the reader has not watched the video.
 
-LANGUAGE RULE: If the transcript is in Chinese, write the entire digest in Chinese — do not translate. Keep the section headers (### Part 1:, ### Part 2:, etc.) exactly as shown. For Chinese responses, use Chinese sub-labels: 总体摘要, 关键点, 关键主题, 结论, 引用, 重要性, 如何应用, 核心论点, 锚点引用.
+LANGUAGE RULE: If the transcript is in Chinese, write the entire digest in Chinese — do not translate. Keep the section headers (### Part 1:, ### Part 2:, etc.) and ### Reflect exactly as shown. For Chinese responses, use Chinese sub-labels: 总体摘要, 关键点, 关键主题, 结论, 引用, 重要性, 如何应用, 核心论点, 锚点引用, 思维逻辑 (Logic in Part 9). For the Reflect section in Chinese, use: 试试这个结构 (Try this structure), 参考思路 Q1 (One way to approach Q1), 立场 (Position), 原因 (Because), 尽管如此 (Even though), 因此 (So).
 
 READER CONTEXT:
 The reader is {reader_name} — {reader_profile}
@@ -118,6 +118,32 @@ OUTPUT FORMAT (markdown, compact — no extra blank lines between items):
 1. Title: "[Title]"
    Core Argument: [2 sentences]
    Anchor Quote: [MM:SS] "[quote]"   (include [MM:SS] timestamp if available, like Part 2)
+
+### Part 9: Logic & Decision Frameworks
+[How the speaker thinks — not what they concluded, but HOW they got there.
+Extract 2–4 examples of actual reasoning moves, decision chains, or mental models they explicitly use.]
+1. [Framework or Decision Name]: [1-sentence description]
+   Logic: [2–3 sentences — the assumptions made, the steps taken, how they arrived at the conclusion]
+2. [repeat]
+3. [repeat]
+
+### Reflect
+[You are writing for {reader_name}. Generate exactly 3 sharp questions that force a position, not a summary.
+Questions must be specific to THIS episode — never generic.
+Bad: "What did you think of this episode?"
+Good: "Kaplan argues WoW succeeded because of community, not mechanics. Do you buy that — and what does it imply for retention design in a mobile game?"
+Each question must be answerable in 2–4 sentences by someone who read the digest but didn't watch the video.]
+1. [Question]
+2. [Question]
+3. [Question]
+
+**Try this structure:** Position · Because · Even though · So
+
+**One way to approach Q1:**
+**Position:** [1 sentence taking a clear stance on Q1]
+**Because:** [1–2 sentences — the core reasoning]
+**Even though:** [1 sentence — the strongest counterpoint you'd acknowledge]
+**So:** [1 sentence — practical implication for {reader_name}]
 """
 
 BRIEF_PROMPT_TEMPLATE = """You are an expert content analyst.

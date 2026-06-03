@@ -12,6 +12,7 @@ import re
 import sys
 import json
 import argparse
+import datetime
 import requests
 from html import unescape
 from dotenv import load_dotenv
@@ -25,6 +26,40 @@ load_dotenv()
 
 YOUTUBE_API_KEY = os.getenv("YOUTUBE_API_KEY")
 HEADERS = {"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)"}
+
+
+RETRY_QUEUE_PATH = "retry_queue.json"
+
+
+def _add_to_retry_queue(metadata):
+    """Add a YouTube video to the retry queue if not already present."""
+    try:
+        with open(RETRY_QUEUE_PATH) as f:
+            queue = json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError):
+        queue = []
+
+    video_id = metadata["video_id"]
+    if any(entry["video_id"] == video_id for entry in queue):
+        print(f"[INFO] Already in retry queue: {metadata['title']}")
+        return
+
+    queue.append({
+        "url": metadata["url"],
+        "video_id": video_id,
+        "title": metadata["title"],
+        "channel": metadata.get("channel", ""),
+        "description": metadata.get("description", ""),
+        "lang": metadata.get("lang", "en"),
+        "duration": metadata.get("duration"),
+        "added_at": datetime.date.today().isoformat(),
+        "last_attempted": datetime.date.today().isoformat(),
+        "attempts": 1,
+        "max_attempts": 7,
+    })
+    with open(RETRY_QUEUE_PATH, "w") as f:
+        json.dump(queue, f, indent=2)
+    print(f"[INFO] Added to retry queue: {metadata['title']} (will retry up to 7 daily runs)")
 
 
 # ── Metadata fetchers ──────────────────────────────────────────────────────────
@@ -41,6 +76,8 @@ def _fetch_xiaoyuzhou(url):
         raise RuntimeError("Could not find __NEXT_DATA__ in xiaoyuzhou page")
     data = json.loads(m.group(1))
     ep = data["props"]["pageProps"]["episode"]
+    print(f"[DEBUG] Xiaoyuzhou episode keys: {list(ep.keys())}")
+    print(f"[DEBUG] Xiaoyuzhou duration field: {ep.get('duration')!r}")
     episode_id = ep.get("eid") or url.split("/")[-1]
     title = ep.get("title", "Untitled")
     channel = ep.get("podcast", {}).get("title", "Unknown Podcast")
@@ -49,6 +86,7 @@ def _fetch_xiaoyuzhou(url):
     description = re.sub(r"<[^>]+>", " ", raw_notes)
     description = unescape(description).strip()[:500]
     audio_url = ep["media"]["source"]["url"]
+    duration_sec = ep.get("duration")
     return {
         "anchor_id": episode_id,
         "episode_id": episode_id,
@@ -57,43 +95,63 @@ def _fetch_xiaoyuzhou(url):
         "description": description,
         "url": url,
         "audio_url": audio_url,
+        "duration": duration_sec / 60 if duration_sec else None,
     }
 
 
 def _fetch_apple_podcasts(url):
-    """Extract episode metadata from an Apple Podcasts URL via iTunes API."""
-    # URL: .../id<podcast_id>?i=<episode_id>
-    pod_m = re.search(r"/id(\d+)", url)
-    ep_m = re.search(r"[?&]i=(\d+)", url)
-    if not pod_m or not ep_m:
-        raise RuntimeError(f"Cannot parse Apple Podcasts URL: {url}")
-    podcast_id = pod_m.group(1)
-    episode_track_id = int(ep_m.group(1))
-
-    api_url = f"https://itunes.apple.com/lookup?id={podcast_id}&entity=podcastEpisode&limit=300"
-    r = requests.get(api_url, timeout=20)
+    """Extract episode metadata by scraping the Apple Podcasts web page directly."""
+    r = requests.get(url, headers=HEADERS, timeout=20)
     r.raise_for_status()
-    results = r.json().get("results", [])
-    ep = next((x for x in results if x.get("trackId") == episode_track_id), None)
-    if not ep:
-        raise RuntimeError(f"Episode {episode_track_id} not found in iTunes results for podcast {podcast_id}")
 
-    episode_id = str(episode_track_id)
-    title = ep.get("trackName", "Untitled")
-    channel = ep.get("collectionName", "Unknown Podcast")
-    description = (ep.get("description", "") or "")[:500]
-    audio_url = ep.get("episodeUrl", "")
-    if not audio_url:
-        raise RuntimeError(f"No episodeUrl found for episode {episode_track_id}")
-    episode_url = ep.get("trackViewUrl", url)
+    scripts = re.findall(r'<script[^>]*>(.*?)</script>', r.text, re.DOTALL)
+
+    # Script 0: schema.org JSON-LD — has description
+    description = ""
+    try:
+        schema = json.loads(scripts[0])
+        description = (schema.get("description", "") or "")[:500]
+    except (IndexError, json.JSONDecodeError, KeyError):
+        pass
+
+    # Find the script with episodeOffer data
+    ep_offer = None
+    for script in scripts:
+        if '"streamUrl"' in script and '"episodeOffer"' in script:
+            try:
+                data = json.loads(script)
+                shelves = data["data"][0]["data"]["shelves"]
+                for shelf in shelves:
+                    for item in shelf.get("items", []):
+                        offer = item.get("contextAction", {}).get("episodeOffer")
+                        if offer and offer.get("streamUrl"):
+                            ep_offer = offer
+                            break
+                    if ep_offer:
+                        break
+            except (json.JSONDecodeError, KeyError, IndexError):
+                continue
+        if ep_offer:
+            break
+
+    if not ep_offer:
+        raise RuntimeError(f"Could not extract episode data from Apple Podcasts page: {url}")
+
+    episode_id = str(ep_offer.get("contentId", url.split("i=")[-1]))
+    title = ep_offer.get("title", "Untitled")
+    channel = ep_offer.get("showOffer", {}).get("title", "Unknown Podcast")
+    audio_url = ep_offer["streamUrl"]
+    duration_sec = ep_offer.get("duration")
+
     return {
         "anchor_id": episode_id,
         "episode_id": episode_id,
         "title": title,
         "channel": channel,
         "description": description,
-        "url": episode_url,
+        "url": url,
         "audio_url": audio_url,
+        "duration": duration_sec / 60 if duration_sec else None,
     }
 
 
@@ -130,14 +188,26 @@ def _detect_channel_lang(channel_id, youtube_client):
         return None
 
 
+def _parse_iso_duration(s):
+    """Parse ISO 8601 duration (e.g. PT1H23M45S) to total minutes."""
+    m = re.match(r'PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?', s or "")
+    if not m:
+        return None
+    hours = int(m.group(1) or 0)
+    minutes = int(m.group(2) or 0)
+    seconds = int(m.group(3) or 0)
+    return hours * 60 + minutes + seconds / 60
+
+
 def _fetch_youtube_metadata(url, lang=None):
     video_id = _extract_youtube_id(url)
     youtube = build("youtube", "v3", developerKey=YOUTUBE_API_KEY)
-    resp = youtube.videos().list(part="snippet", id=video_id).execute()
+    resp = youtube.videos().list(part="snippet,contentDetails", id=video_id).execute()
     items = resp.get("items", [])
     if not items:
         raise RuntimeError(f"No YouTube results for video: {video_id}")
     snippet = items[0]["snippet"]
+    duration = _parse_iso_duration(items[0].get("contentDetails", {}).get("duration", ""))
 
     # Auto-detect lang from channels_en.json if not explicitly overridden
     if lang is None:
@@ -151,6 +221,7 @@ def _fetch_youtube_metadata(url, lang=None):
         "description": snippet.get("description", "")[:500],
         "url": f"https://www.youtube.com/watch?v={video_id}",
         "lang": lang,
+        "duration": duration,
     }
 
 
@@ -198,6 +269,7 @@ def main(urls, lang=None):
                 youtube_digests.append({"video": metadata, "digest": digest})
             else:
                 print(f"[WARN] No digest produced for: {metadata['title']}")
+                _add_to_retry_queue(metadata)
         else:
             digest = summarize_episode(metadata)
             if digest:

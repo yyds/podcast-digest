@@ -21,5 +21,15 @@
   {"handle": "@LatentSpacePod",         "lang": "en"},
   {"handle": "@GregIsenberg",           "lang": "en"},
   {"handle": "@kedaibiao",              "lang": "zh"},
-  {"handle": "@cuc3397",                "lang": "zh"}
+  {"handle": "@cuc3397",                "lang": "zh"},
+  {"handle": "@TheValley101",           "lang": "zh"},
+  {"handle": "@nfxinsights",            "lang": "en"},
+  {"handle": "@a16z",                   "lang": "en"},
+  {"handle": "@sequoiacapital",         "lang": "en"},
+  {"handle": "@a16zspeedrun",           "lang": "en"},
+  {"handle": "@DataDrivenNYC",          "lang": "en"},
+  {"handle": "@theneuronai",            "lang": "en"},
+  {"handle": "@ILTB_Podcast",           "lang": "en"},
+  {"handle": "@timferriss",             "lang": "en"},
+  {"handle": "@SubversivePodcst",       "lang": "en"}
 ]

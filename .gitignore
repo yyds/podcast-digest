@@ -1,8 +1,6 @@
 # Personal config — never commit these
 .env
 config.json
-processed_videos.json
-processed_podcasts.json
 
 # Runtime output
 archive/

@@ -44,6 +44,17 @@ def _send_html_email(subject, html_body):
         print(f"[ERROR] Failed to send email: {e}")
 
 
+def _fmt_duration(minutes):
+    """Format minutes as '1h 23m' or '45 min'."""
+    if not minutes:
+        return None
+    m = round(minutes)
+    if m >= 60:
+        h, r = divmod(m, 60)
+        return f"{h}h {r}m" if r else f"{h}h"
+    return f"{m} min"
+
+
 CSS = """
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { background: #f0efeb; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 14px; color: #111; }
@@ -70,6 +81,19 @@ body { background: #f0efeb; font-family: -apple-system, BlinkMacSystemFont, 'Seg
 .label-6 { background: #e5e7eb; color: #1f2937; }
 .label-7 { background: #cffafe; color: #0e4f60; }
 .label-8 { background: #fce7f3; color: #831843; }
+.label-9 { background: #ede9fe; color: #5b21b6; }
+.logic-row { padding: 8px 11px; border-left: 3px solid #4f46e5; background: #eef2ff; border-radius: 0 6px 6px 0; margin-bottom: 6px; }
+.logic-title { font-size: 13px; font-weight: 700; color: #111; margin-bottom: 3px; }
+.logic-body { font-size: 12px; color: #333; line-height: 1.6; }
+.logic-label { font-weight: 700; color: #4f46e5; }
+.reflect-box { border: 2px dashed #f59e0b; background: #fffbeb; border-radius: 8px; padding: 14px 16px; margin-top: 4px; }
+.reflect-header { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.7px; color: #92400e; background: #fef3c7; display: inline-block; padding: 3px 9px; border-radius: 4px; margin-bottom: 10px; }
+.reflect-questions { padding-left: 18px; margin: 8px 0 12px; }
+.reflect-question { font-size: 13px; line-height: 1.7; color: #1a1a1a; margin-bottom: 8px; }
+.reflect-scaffold { font-size: 12px; color: #92400e; padding: 7px 0; border-top: 1px solid #fcd34d; border-bottom: 1px solid #fcd34d; margin: 4px 0 10px; text-align: center; }
+.reflect-sample { background: #fff; border-radius: 6px; padding: 10px 12px; border: 1px solid #fcd34d; }
+.reflect-sample-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.7px; color: #b45309; margin-bottom: 8px; }
+.reflect-sample-line { font-size: 13px; line-height: 1.6; color: #222; margin-bottom: 5px; }
 .summary { font-size: 14px; line-height: 1.7; color: #222; margin-bottom: 9px; }
 .topic-list { list-style: none; border-top: 1px solid #e8e8e4; }
 .topic-list li { padding: 6px 0; border-bottom: 1px solid #e8e8e4; font-size: 13px; line-height: 1.5; color: #222; }
@@ -117,6 +141,7 @@ def _section_config():
         6: ("label-6", "⑤ Entities Mentioned"),
         7: ("label-7", "⑥ Tweet-sized takeaways"),
         8: ("label-8", "⑦ Essay angles"),
+        9: ("label-9", "⑨ Logic & Frameworks"),
     }
 
 
@@ -170,6 +195,10 @@ def split_sections(digest):
             if current_num:
                 sections[current_num] = "\n".join(current_lines).strip()
             current_num = int(m.group(1))
+            current_lines = []
+        elif re.match(r'### Reflect', line) and current_num:
+            sections[current_num] = "\n".join(current_lines).strip()
+            current_num = 0
             current_lines = []
         else:
             current_lines.append(line)
@@ -453,6 +482,95 @@ def render_section_8(content, video_url, is_chinese=False):
     return html
 
 
+def render_section_9(content, video_url, is_chinese=False):
+    items = []
+    current_title, current_logic = "", ""
+
+    for line in content.split("\n"):
+        s = line.strip()
+        if not s:
+            continue
+        if re.match(r'^\d+\.', s):
+            if current_title:
+                items.append((current_title, current_logic))
+            current_title = re.sub(r'^\d+\.\s*', '', s)
+            current_logic = ""
+        elif s.lower().startswith("logic:") or s.startswith("思维逻辑："):
+            current_logic = re.sub(r'^(logic:|思维逻辑：)\s*', '', s, flags=re.IGNORECASE)
+        else:
+            if current_logic:
+                current_logic += " " + s
+            elif current_title:
+                current_title += " " + s
+
+    if current_title:
+        items.append((current_title, current_logic))
+
+    logic_label = "思维逻辑" if is_chinese else "Logic"
+    html = ""
+    for title, logic in items:
+        html += '<div class="logic-row">'
+        html += f'<div class="logic-title">{bold(title)}</div>'
+        if logic:
+            html += f'<div class="logic-body"><span class="logic-label">{logic_label}:</span> {bold(logic)}</div>'
+        html += '</div>'
+    return html
+
+
+def parse_reflect(digest):
+    """Extract the Reflect section from the raw digest string."""
+    m = re.search(r'### Reflect\s*\n(.*)', digest, re.DOTALL)
+    if not m:
+        return None
+    return m.group(1).strip()
+
+
+def render_reflect(content):
+    """Render the Reflect section: questions, scaffold, and sample response."""
+    lines = content.split("\n")
+    questions = []
+    scaffold_text = ""
+    sample_lines = []
+    mode = "questions"
+
+    for line in lines:
+        s = line.strip()
+        if not s:
+            continue
+        if mode == "questions" and re.match(r'^\d+\.', s):
+            questions.append(re.sub(r'^\d+\.\s*', '', s))
+        elif re.match(r'^\*\*(?:Try this structure|试试这个结构)', s):
+            scaffold_text = re.sub(r'^\*\*[^*]+\*\*:?\s*', '', s)
+            mode = "scaffold"
+        elif re.match(r'^\*\*(?:One way to approach|参考思路)', s):
+            mode = "sample"
+        elif mode == "sample":
+            sample_lines.append(s)
+
+    html = '<div class="reflect-box">'
+    html += '<div class="reflect-header">✍ Reflect</div>'
+
+    if questions:
+        html += '<ol class="reflect-questions">'
+        for q in questions:
+            html += f'<li class="reflect-question">{bold(q)}</li>'
+        html += '</ol>'
+
+    if scaffold_text:
+        html += f'<div class="reflect-scaffold"><em>{scaffold_text}</em></div>'
+
+    if sample_lines:
+        html += '<div class="reflect-sample">'
+        html += '<div class="reflect-sample-label">One way to approach Q1:</div>'
+        for s in sample_lines:
+            if s:
+                html += f'<p class="reflect-sample-line">{bold(s)}</p>'
+        html += '</div>'
+
+    html += '</div>'
+    return html
+
+
 SECTION_RENDERERS = {
     1: render_section_1,
     2: render_section_2,
@@ -462,6 +580,7 @@ SECTION_RENDERERS = {
     6: render_section_6,
     7: render_section_7,
     8: render_section_8,
+    9: render_section_9,
 }
 
 
@@ -486,6 +605,9 @@ def render_card(item):
         byline += f"{host_label}: <strong>{hosts}</strong>"
     if guests and guests != "N/A":
         byline += f" &nbsp;·&nbsp; {guest_label}: <strong>{guests}</strong>"
+    dur = _fmt_duration(video.get("duration"))
+    if dur:
+        byline += f" &nbsp;·&nbsp; ⏱ {dur}"
     byline += f' <a class="watch-link" href="{video_url}">▶ Watch original →</a>'
 
     html = f"""
@@ -498,8 +620,8 @@ def render_card(item):
       <div class="card-body">
     """
 
-    # Part 3 (actionable) last; display labels ③–⑧ follow display order
-    render_order = [1, 2, 4, 5, 6, 7, 8, 3]
+    # Part 9 (Logic) after Overview; Part 3 (actionable) last
+    render_order = [1, 9, 2, 4, 5, 6, 7, 8, 3]
     for num in render_order:
         if num not in sections:
             continue
@@ -509,6 +631,10 @@ def render_card(item):
         rendered = renderer(content, video_url, is_chinese) if renderer else f"<p>{content}</p>"
         if rendered.strip():
             html += f'<div class="section"><div class="section-label {css_class}">{label}</div>{rendered}</div>'
+
+    reflect = parse_reflect(digest)
+    if reflect:
+        html += render_reflect(reflect)
 
     html += "</div></div>"
     return html
@@ -606,6 +732,9 @@ def build_email_html(digests, short_videos=None):
     today = date.today().strftime("%B %d, %Y")
     count = len(digests)
 
+    total_listen = sum(item["video"].get("duration") or 0 for item in digests)
+    stats_str = f"⏱ {_fmt_duration(total_listen)} video" if total_listen else ""
+
     toc_html = build_toc(digests)
     cards_html = "\n".join(render_card(item) for item in digests)
     short_html = render_short_videos_section(short_videos or [])
@@ -623,6 +752,7 @@ def build_email_html(digests, short_videos=None):
     <div>
       <div class="header-date">{today}</div>
       <div class="header-count">{count} new video{"s" if count != 1 else ""}</div>
+      <div class="header-sub" style="margin-top:2px;">{stats_str}</div>
     </div>
   </div>
   {toc_html}

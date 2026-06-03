@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 import pathlib
 
 import re
-from send_email import CSS, render_card, render_brief_card, card_anchor, render_short_videos_section, _send_html_email, bold
+from send_email import CSS, render_card, render_brief_card, card_anchor, render_short_videos_section, _send_html_email, bold, _fmt_duration
 
 _MONTH_CN = ["1月", "2月", "3月", "4月", "5月", "6月",
              "7月", "8月", "9月", "10月", "11月", "12月"]
@@ -112,6 +112,21 @@ def build_combined_email_html(youtube_digests, podcast_digests, yt_short_videos=
         count_line.append(f"{pod_count} 期播客")
     count_str = " · ".join(count_line)
 
+    yt_listen = (
+        sum(item["video"].get("duration") or 0 for item in youtube_digests)
+        + sum(item["video"].get("duration") or 0 for item in (yt_brief_digests or []))
+    )
+    pod_listen = sum(item["episode"].get("duration") or 0 for item in podcast_digests)
+    total_listen = yt_listen + pod_listen
+    if yt_listen and pod_listen:
+        stats_str = f"⏱ {_fmt_duration(total_listen)} video & audio"
+    elif yt_listen:
+        stats_str = f"⏱ {_fmt_duration(yt_listen)} video"
+    elif pod_listen:
+        stats_str = f"⏱ {_fmt_duration(pod_listen)} audio"
+    else:
+        stats_str = ""
+
     return f"""<!DOCTYPE html>
 <html>
 <head>
@@ -132,6 +147,7 @@ def build_combined_email_html(youtube_digests, podcast_digests, yt_short_videos=
         <td style="vertical-align:middle;text-align:right;white-space:nowrap;">
           <div class="header-date">{today_en} · {date_cn}</div>
           <div class="header-count">{count_str}</div>
+          <div class="header-sub" style="margin-top:2px;">{stats_str}</div>
         </td>
       </tr>
     </table>

@@ -30,6 +30,26 @@ def save_processed(processed):
         json.dump(list(processed), f, indent=2)
 
 
+def _parse_itunes_duration(s):
+    """Parse itunes:duration (HH:MM:SS, MM:SS, or raw seconds) to total minutes."""
+    if not s:
+        return None
+    s = str(s).strip()
+    if ":" in s:
+        parts = s.split(":")
+        try:
+            if len(parts) == 3:
+                return int(parts[0]) * 60 + int(parts[1]) + int(parts[2]) / 60
+            elif len(parts) == 2:
+                return int(parts[0]) + int(parts[1]) / 60
+        except (ValueError, IndexError):
+            return None
+    try:
+        return int(s) / 60
+    except (ValueError, TypeError):
+        return None
+
+
 def _safe_anchor_id(channel_name, episode_id):
     """Generate a safe HTML anchor ID from channel name + episode identifier."""
     slug = episode_id.split("/")[-1] if episode_id.startswith("http") else episode_id
@@ -41,7 +61,7 @@ def _safe_anchor_id(channel_name, episode_id):
 def get_new_episodes():
     processed = load_processed()
     new_episodes = []
-    cutoff = datetime.now(timezone.utc) - timedelta(hours=24)
+    cutoff = datetime.now(timezone.utc) - timedelta(hours=120)  # BACKFILL: covers May 30–Jun 2
 
     for channel in load_channels():
         name = channel.get("name", "Unknown")
@@ -53,7 +73,7 @@ def get_new_episodes():
         print(f"[INFO] Fetching RSS for {name}...")
 
         try:
-            feed = feedparser.parse(rss_url)
+            feed = feedparser.parse(rss_url, agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36")
         except Exception as e:
             print(f"[ERROR] Failed to fetch RSS for {name}: {e}")
             continue
@@ -101,6 +121,7 @@ def get_new_episodes():
                 "description": entry.get("summary", "")[:500],
                 "url": episode_url,
                 "audio_url": audio_url,
+                "duration": _parse_itunes_duration(entry.get("itunes_duration")),
             })
             print(f"[INFO] New episode: {title}")
 

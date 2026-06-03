@@ -104,7 +104,7 @@ def get_new_videos():
             print(f"[ERROR] Failed to fetch videos for {handle}: {e}")
             continue
 
-        cutoff = datetime.now(timezone.utc) - timedelta(hours=24)
+        cutoff = datetime.now(timezone.utc) - timedelta(hours=120)  # BACKFILL: covers May 30–Jun 2
 
         for item in response.get("items", []):
             snippet = item["snippet"]
@@ -133,6 +133,7 @@ def get_new_videos():
             }
 
             duration = get_duration_minutes(youtube, video_id)
+            video_data["duration"] = duration
             if duration is not None and duration < MIN_DURATION_MINUTES:
                 print(f"[INFO] Short video ({duration:.0f} min), will mention only: {snippet['title']}")
                 short_videos.append(video_data)

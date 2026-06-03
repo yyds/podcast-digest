@@ -3,4 +3,7 @@ google-api-python-client
 python-dotenv
 requests
 feedparser
+youtube-transcript-api
+groq
+openai
 pytest>=7.0
