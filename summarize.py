@@ -5,6 +5,7 @@ from datetime import date
 from google import genai
 from dotenv import load_dotenv
 from youtube_transcript_api import YouTubeTranscriptApi
+from youtube_transcript_api.proxies import WebshareProxyConfig
 
 load_dotenv()
 
@@ -16,7 +17,16 @@ MODEL = "gemini-2.5-flash-lite"
 
 client = genai.Client(api_key=GEMINI_API_KEY)
 
-_yta = YouTubeTranscriptApi()
+_webshare_user = os.getenv("WEBSHARE_USERNAME")
+_webshare_pass = os.getenv("WEBSHARE_PASSWORD")
+if _webshare_user and _webshare_pass:
+    _yta = YouTubeTranscriptApi(proxy_config=WebshareProxyConfig(
+        proxy_username=_webshare_user,
+        proxy_password=_webshare_pass,
+    ))
+    print("[INFO] Using Webshare residential proxy for YouTube transcripts")
+else:
+    _yta = YouTubeTranscriptApi()
 
 def get_transcript(video_id, lang='en'):
     """Fetch transcript. Uses lang hint to prioritize English or Chinese."""
