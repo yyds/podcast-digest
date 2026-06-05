@@ -104,7 +104,7 @@ def get_new_videos():
             print(f"[ERROR] Failed to fetch videos for {handle}: {e}")
             continue
 
-        cutoff = datetime.now(timezone.utc) - timedelta(hours=24)
+        cutoff = datetime.now(timezone.utc) - timedelta(hours=168)  # BACKFILL: 7-day window for May 30+
 
         for item in response.get("items", []):
             snippet = item["snippet"]
