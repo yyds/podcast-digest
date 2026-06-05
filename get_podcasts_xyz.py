@@ -61,7 +61,7 @@ def _safe_anchor_id(channel_name, episode_id):
 def get_new_episodes():
     processed = load_processed()
     new_episodes = []
-    cutoff = datetime.now(timezone.utc) - timedelta(hours=168)  # BACKFILL: 7-day window for May 30+
+    cutoff = datetime.now(timezone.utc) - timedelta(hours=24)
 
     for channel in load_channels():
         name = channel.get("name", "Unknown")
