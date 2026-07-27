@@ -1,9 +1,9 @@
 {
   "2026-07-27": [
-    "pingdotgg/t3code",
-    "CoreBunch/Instatic",
-    "EvanZhouDev/openai-oauth",
+    "moeru-ai/airi",
+    "vudovn/ag-kit",
+    "pascalorg/editor",
     "BuilderIO/agent-native",
-    "apollographql/apollo-client"
+    "CoreBunch/Instatic"
   ]
 }
