@@ -1,9 +1,9 @@
 {
-  "2026-07-27": [
-    "moeru-ai/airi",
-    "vudovn/ag-kit",
+  "2026-07-28": [
     "pascalorg/editor",
-    "BuilderIO/agent-native",
-    "CoreBunch/Instatic"
+    "moeru-ai/airi",
+    "opengeos/GeoLibre",
+    "github/docs",
+    "vudovn/ag-kit"
   ]
 }
