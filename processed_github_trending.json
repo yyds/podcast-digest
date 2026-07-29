@@ -1,9 +1,9 @@
 {
-  "2026-07-28": [
-    "pascalorg/editor",
-    "moeru-ai/airi",
+  "2026-07-29": [
     "opengeos/GeoLibre",
-    "github/docs",
-    "vudovn/ag-kit"
+    "moeru-ai/airi",
+    "different-ai/openwork",
+    "pascalorg/editor",
+    "ant-design/ant-design"
   ]
 }
