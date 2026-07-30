@@ -1,9 +1,9 @@
 {
-  "2026-07-29": [
-    "opengeos/GeoLibre",
-    "moeru-ai/airi",
+  "2026-07-30": [
     "different-ai/openwork",
     "pascalorg/editor",
-    "ant-design/ant-design"
+    "ChromeDevTools/chrome-devtools-mcp",
+    "storybookjs/storybook",
+    "nrwl/nx"
   ]
 }
