@@ -1,9 +1,9 @@
 {
-  "2026-07-30": [
+  "2026-07-31": [
     "different-ai/openwork",
-    "pascalorg/editor",
-    "ChromeDevTools/chrome-devtools-mcp",
-    "storybookjs/storybook",
-    "nrwl/nx"
+    "usekaneo/kaneo",
+    "cursor/plugins",
+    "TencentCloud/TencentDB-Agent-Memory",
+    "moeru-ai/airi"
   ]
 }
