@@ -1,9 +1,9 @@
 {
-  "2026-08-01": [
+  "2026-08-02": [
     "usekaneo/kaneo",
+    "different-ai/openwork",
     "TencentCloud/TencentDB-Agent-Memory",
-    "vuejs/core",
-    "actions/starter-workflows",
-    "ChromeDevTools/chrome-devtools-mcp"
+    "actions/checkout",
+    "Narcooo/inkos"
   ]
 }
