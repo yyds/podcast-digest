@@ -1,9 +1,9 @@
 {
-  "2026-08-02": [
-    "usekaneo/kaneo",
-    "different-ai/openwork",
+  "2026-08-03": [
     "TencentCloud/TencentDB-Agent-Memory",
-    "actions/checkout",
-    "Narcooo/inkos"
+    "usekaneo/kaneo",
+    "jamiepine/voicebox",
+    "can1357/oh-my-pi",
+    "karakeep-app/karakeep"
   ]
 }
