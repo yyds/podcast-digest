@@ -1,9 +1,9 @@
 {
-  "2026-08-03": [
+  "2026-08-04": [
     "TencentCloud/TencentDB-Agent-Memory",
+    "cypress-io/cypress",
     "usekaneo/kaneo",
-    "jamiepine/voicebox",
-    "can1357/oh-my-pi",
-    "karakeep-app/karakeep"
+    "angular/angular",
+    "tailwindlabs/tailwindcss"
   ]
 }
