@@ -1,9 +1,9 @@
 {
-  "2026-08-04": [
+  "2026-08-05": [
+    "cloudflare/computer",
     "TencentCloud/TencentDB-Agent-Memory",
-    "cypress-io/cypress",
-    "usekaneo/kaneo",
-    "angular/angular",
-    "tailwindlabs/tailwindcss"
+    "tailwindlabs/tailwindcss",
+    "ever-co/ever-gauzy",
+    "cypress-io/cypress"
   ]
 }
