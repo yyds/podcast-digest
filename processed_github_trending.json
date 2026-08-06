@@ -1,9 +1,9 @@
 {
-  "2026-08-05": [
-    "cloudflare/computer",
+  "2026-08-06": [
     "TencentCloud/TencentDB-Agent-Memory",
-    "tailwindlabs/tailwindcss",
-    "ever-co/ever-gauzy",
-    "cypress-io/cypress"
+    "cloudflare/computer",
+    "AdventDevInc/kudu",
+    "iOfficeAI/AionUi",
+    "expo/expo"
   ]
 }
