@@ -1,9 +1,9 @@
 {
-  "2026-08-06": [
-    "TencentCloud/TencentDB-Agent-Memory",
+  "2026-08-07": [
+    "PrimeIntellect-ai/prime-agent",
     "cloudflare/computer",
-    "AdventDevInc/kudu",
-    "iOfficeAI/AionUi",
-    "expo/expo"
+    "TencentCloud/TencentDB-Agent-Memory",
+    "tashfeenahmed/freellmapi",
+    "iOfficeAI/AionUi"
   ]
 }
