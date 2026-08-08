@@ -1,9 +1,9 @@
 {
-  "2026-08-07": [
+  "2026-08-08": [
     "PrimeIntellect-ai/prime-agent",
-    "cloudflare/computer",
-    "TencentCloud/TencentDB-Agent-Memory",
-    "tashfeenahmed/freellmapi",
-    "iOfficeAI/AionUi"
+    "pingdotgg/t3code",
+    "can1357/oh-my-pi",
+    "heygen-com/hyperframes",
+    "open-metadata/OpenMetadata"
   ]
 }
