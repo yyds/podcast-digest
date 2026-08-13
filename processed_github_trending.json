@@ -1,9 +1,9 @@
 {
-  "2026-08-12": [
-    "stablyai/orca",
-    "paperclipai/paperclip",
+  "2026-08-13": [
+    "holaboss-ai/holaOS",
+    "lightningpixel/modly",
     "ZuodaoTech/everyone-can-use-english",
-    "openclaw/openclaw",
-    "earendil-works/pi"
+    "cursor/plugins",
+    "fastapi/full-stack-fastapi-template"
   ]
 }
