@@ -1,9 +1,9 @@
 {
-  "2026-08-14": [
-    "holaboss-ai/holaOS",
-    "lightningpixel/modly",
+  "2026-08-15": [
+    "cordiverse/cordis",
     "cursor/plugins",
-    "OpenCut-app/OpenCut",
-    "OpenHands/OpenHands"
+    "lightningpixel/modly",
+    "THU-MAIC/OpenMAIC",
+    "grafana/grafana"
   ]
 }
