@@ -1,9 +1,9 @@
 {
-  "2026-08-15": [
+  "2026-08-16": [
     "cordiverse/cordis",
+    "OpenCut-app/OpenCut",
+    "liustack/modlens",
     "cursor/plugins",
-    "lightningpixel/modly",
-    "THU-MAIC/OpenMAIC",
-    "grafana/grafana"
+    "CodebuffAI/freebuff"
   ]
 }
