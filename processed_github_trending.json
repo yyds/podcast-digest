@@ -1,9 +1,9 @@
 {
-  "2026-08-16": [
+  "2026-08-17": [
+    "immich-app/immich",
     "cordiverse/cordis",
-    "OpenCut-app/OpenCut",
+    "agalwood/Motrix",
     "liustack/modlens",
-    "cursor/plugins",
-    "CodebuffAI/freebuff"
+    "amruthpillai/reactive-resume"
   ]
 }
