@@ -1,9 +1,9 @@
 {
-  "2026-08-19": [
+  "2026-08-20": [
+    "cursor/plugins",
     "chaitanyagiri/munder-difflin",
-    "agalwood/Motrix",
-    "genlayerlabs/genlayer-project-boilerplate",
-    "OpenCut-app/OpenCut",
-    "amruthpillai/reactive-resume"
+    "makeplane/plane",
+    "magnitudedev/magnitude",
+    "OpenCut-app/OpenCut"
   ]
 }
