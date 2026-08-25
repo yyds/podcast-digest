@@ -1,9 +1,9 @@
 {
-  "2026-08-24": [
-    "makeplane/plane",
+  "2026-08-25": [
     "apache/maka",
-    "openclaw/openclaw",
+    "cloudflare/cloudflare-os",
     "tashfeenahmed/freellmapi",
-    "traycerai/traycer"
+    "EveryInc/compound-engineering-plugin",
+    "makeplane/plane"
   ]
 }
