@@ -1,9 +1,9 @@
 {
-  "2026-08-25": [
+  "2026-08-26": [
     "apache/maka",
-    "cloudflare/cloudflare-os",
+    "can1357/oh-my-pi",
+    "tailwindlabs/tailwindcss",
     "tashfeenahmed/freellmapi",
-    "EveryInc/compound-engineering-plugin",
-    "makeplane/plane"
+    "OpenCut-app/OpenCut"
   ]
 }
