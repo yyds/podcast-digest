@@ -1,9 +1,9 @@
 {
-  "2026-09-11": [
-    "nab138/iloader",
+  "2026-09-12": [
     "melgarafael/DeskcommCRM",
-    "vastsa/PI-Desktop",
+    "nab138/iloader",
     "alsk1992/CloddsBot",
-    "nashsu/llm_wiki"
+    "nashsu/llm_wiki",
+    "vastsa/PI-Desktop"
   ]
 }
