@@ -1,9 +1,9 @@
 {
-  "2026-09-12": [
+  "2026-09-13": [
+    "ever-co/ever-gauzy",
+    "tech-leads-club/agent-skills",
     "melgarafael/DeskcommCRM",
-    "nab138/iloader",
-    "alsk1992/CloddsBot",
-    "nashsu/llm_wiki",
-    "vastsa/PI-Desktop"
+    "ColeMurray/background-agents",
+    "microsoft/AI-Engineering-Coach"
   ]
 }
