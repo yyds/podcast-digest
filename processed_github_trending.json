@@ -1,9 +1,9 @@
 {
-  "2026-09-17": [
-    "Tencent/BrowserSkill",
+  "2026-09-18": [
     "anthropics/claude-code",
-    "jamiepine/voicebox",
-    "ever-co/ever-gauzy",
-    "cline/cline"
+    "Tencent/BrowserSkill",
+    "Fission-AI/OpenSpec",
+    "supermemoryai/supermemory",
+    "supabase/supabase"
   ]
 }
