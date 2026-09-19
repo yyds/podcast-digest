@@ -1,9 +1,9 @@
 {
-  "2026-09-18": [
+  "2026-09-19": [
     "anthropics/claude-code",
-    "Tencent/BrowserSkill",
-    "Fission-AI/OpenSpec",
-    "supermemoryai/supermemory",
-    "supabase/supabase"
+    "Open-Dev-Society/OpenStock",
+    "ZuodaoTech/everyone-can-use-english",
+    "vercel-labs/json-render",
+    "ahmedkhaleel2004/gitdiagram"
   ]
 }
