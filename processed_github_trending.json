@@ -1,9 +1,9 @@
 {
-  "2026-09-19": [
+  "2026-09-20": [
+    "BuilderIO/agent-native",
     "anthropics/claude-code",
     "Open-Dev-Society/OpenStock",
-    "ZuodaoTech/everyone-can-use-english",
     "vercel-labs/json-render",
-    "ahmedkhaleel2004/gitdiagram"
+    "cloudflare/mcp-server-cloudflare"
   ]
 }
