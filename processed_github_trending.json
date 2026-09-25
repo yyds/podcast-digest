@@ -1,9 +1,9 @@
 {
-  "2026-09-24": [
+  "2026-09-25": [
+    "paperclipai/paperclip",
     "dream-num/univer",
-    "FxEmbed/FxEmbed",
-    "can1357/oh-my-pi",
-    "every-app/open-seo",
-    "remotion-dev/remotion"
+    "payloadcms/payload",
+    "stablyai/orca",
+    "NginxProxyManager/nginx-proxy-manager"
   ]
 }
