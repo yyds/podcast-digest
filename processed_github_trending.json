@@ -1,9 +1,9 @@
 {
-  "2026-09-25": [
+  "2026-09-26": [
     "paperclipai/paperclip",
     "dream-num/univer",
-    "payloadcms/payload",
-    "stablyai/orca",
-    "NginxProxyManager/nginx-proxy-manager"
+    "microsoft/vscode",
+    "anthropics/claude-code-action",
+    "mobile-next/mobile-mcp"
   ]
 }
