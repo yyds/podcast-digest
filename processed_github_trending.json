@@ -1,9 +1,9 @@
 {
-  "2026-09-26": [
+  "2026-09-27": [
     "paperclipai/paperclip",
+    "vercel-labs/scriptc",
+    "mvschwarz/openrig",
     "dream-num/univer",
-    "microsoft/vscode",
-    "anthropics/claude-code-action",
-    "mobile-next/mobile-mcp"
+    "expo/expo"
   ]
 }
