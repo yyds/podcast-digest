@@ -1,9 +1,9 @@
 {
-  "2026-09-30": [
+  "2026-10-01": [
     "mvschwarz/openrig",
+    "cursor/plugins",
     "mksglu/context-mode",
-    "openclaw/openclaw",
     "heygen-com/hyperframes",
-    "modelcontextprotocol/servers"
+    "earendil-works/pi"
   ]
 }
