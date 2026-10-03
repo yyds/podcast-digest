@@ -1,9 +1,9 @@
 {
-  "2026-10-02": [
-    "heygen-com/hyperframes",
-    "mksglu/context-mode",
-    "cursor/plugins",
-    "mvschwarz/openrig",
-    "Effect-TS/effect"
+  "2026-10-03": [
+    "Effect-TS/effect",
+    "pingdotgg/t3code",
+    "thedotmack/claude-mem",
+    "cloudflare/cloudflare-os",
+    "mksglu/context-mode"
   ]
 }
